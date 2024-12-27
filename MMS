@@ -1,30 +1,37 @@
-but2.setOnClickListener(new View.OnClickListener() {
-    @Override public void onClick(View view) {
-        String message = editTextMessage.getText().toString();
-        Uri imageUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.drawable.a);
-        Log.d("GOTFILE", filePath);
-        sendMMS("0902096984", message, imageUri);
-    }
-});
+ private boolean isAccessibilityServiceEnabled(Context context) {
+    AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+    List<AccessibilityServiceInfo> enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK);
 
+    for (AccessibilityServiceInfo enabledService : enabledServices) {
+        if (enabledService.getId().equals(context.getPackageName() + "/.MyAccessibilityService")) { // Thay bằng package và tên service của bạn
+            return true;
+        }
+    }
+    return false;
+}
 
 private void sendMMS(String phoneNumber, String message, Uri imageUri) {
-      try { Intent mmsIntent = new Intent(Intent.ACTION_SEND);
-          byte[] imageData = readFileToByteArray(new File(imageUri.getPath()));
-          SmsManager smsManager = SmsManager.getDefault();
-          smsManager.sendMultimediaMessage(getApplicationContext(), Uri.fromFile(new File(imageUri.getPath())), null, null, null);
-          Toast.makeText(getApplicationContext(), "MMS sent.", Toast.LENGTH_LONG).show();
-      } catch (Exception e) {
-          Toast.makeText(getApplicationContext(), "MMS failed, please try again.", Toast.LENGTH_LONG).show();
-          e.printStackTrace();
-      }
-      Log.d("SENDMMS","DONE");
-  }
+  try {
+        Intent intent = new Intent(Intent.ACTION_SEND);
 
-private byte[] readFileToByteArray(File file) {
-      FileInputStream fileInputStream = null;
-      byte[] bFile = new byte[(int) file.length()];
-      try { fileInputStream = new FileInputStream(file);
-          fileInputStream.read(bFile); fileInputStream.close(); }
-      catch (IOException e) { e.printStackTrace(); }
-      return bFile; }
+        intent.putExtra("address", phoneNumber); // Số điện thoại người nhận
+        intent.putExtra("sms_body", message); // Nội dung tin nhắn (tùy chọn)
+        intent.putExtra(Intent.EXTRA_STREAM, imageUri); // URI hình ảnh
+        intent.setType("image/jpeg");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); // Quan trọng đối với URI nội dung
+
+        // Kiểm tra xem có ứng dụng nào xử lý intent hay không
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+            Toast.makeText(getApplicationContext(), "Đang gửi MMS...", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Không tìm thấy ứng dụng MMS.", Toast.LENGTH_LONG).show();
+        }
+    } catch (Exception e) {
+        Toast.makeText(getApplicationContext(), "MMS failed, please try again.", Toast.LENGTH_LONG).show();
+        e.printStackTrace();
+    }
+    Log.d("SENDMMS",message+"DONE");
+}
+
+
