@@ -9,7 +9,20 @@
     }
     return false;
 }
-
+@Override
+protected void onResume() {
+    super.onResume();
+    if (isAccessibilityServiceEnabled(this)) {
+        // Service đang chạy
+        Toast.makeText(this, "Accessibility Service is running", Toast.LENGTH_SHORT).show();
+    } else {
+        // Service chưa chạy, hiển thị hướng dẫn cho người dùng
+        Toast.makeText(this, "Please enable Accessibility Service in Settings", Toast.LENGTH_LONG).show();
+        // Mở cài đặt Accessibility
+        Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        startActivity(intent);
+    }
+}
 private void sendMMS(String phoneNumber, String message, Uri imageUri) {
   try {
         Intent intent = new Intent(Intent.ACTION_SEND);
